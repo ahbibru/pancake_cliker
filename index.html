@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pancake Clicker</title>
+    <style>
+        :root {
+            --primary-color: #FF6D00;
+            --secondary-color: #FFAB40;
+            --background-color: #FFF8E1;
+            --text-color: #5D4037;
+            --highlight-color: #FF3D00;
+            --upgrade-color: #00C853;
+            --achievement-color: #2962FF;
+            --prestige-color: #AA00FF;
+            --settings-color: #616161;
+            --panel-bg: rgba(255, 255, 255, 0.9);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --offline-color: #FFD600;
+        }
+        
+        .dark-mode {
+            --background-color: #121212;
+            --panel-bg: rgba(30, 30, 30, 0.9);
+            --text-color: #E0E0E0;
+            --primary-color: #FF9100;
+            --secondary-color: #FFC270;
+            --highlight-color: #FF7043;
+            --upgrade-color: #00E676;
+            --achievement-color: #448AFF;
+            --prestige-color: #D500F9;
+            --settings-color: #9E9E9E;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --offline-color: #FFEA00;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--panel-bg);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stats {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .pancake-count {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--highlight-color);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .pps {
+            font-size: 14px;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+        
+        .clicker-section {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 0;
+            background-color: var(--panel-bg);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .clicker-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .clicker {
+            position: relative;
+            margin: 15px 0;
+            transition: transform 0.2s;
+        }
+        
+        .pancake {
+            font-size: 100px;
+            cursor: pointer;
+            transition: all 0.1s;
+            user-select: none;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+        }
+        
+        .pancake:hover {
+            transform: scale(1.05);
+        }
+        
+        .pancake:active {
+            transform: scale(0.95);
+        }
+        
+        .click-effect {
+            position: absolute;
+            font-size: 24px;
+            color: var(--highlight-color);
+            font-weight: bold;
+            animation: float-up 1s forwards;
+            pointer-events: none;
+            user-select: none;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+        
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-60px) scale(0.5);
+                opacity: 0;
+            }
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: -10px;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: var(--panel-bg);
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            color: var(--text-color);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: none;
+            min-width: 100px;
+        }
+        
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tab.active {
+            color: white;
+        }
+        
+        .tab.active::before {
+            opacity: 1;
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: var(--panel-bg);
+            padding: 20px;
+            border-radius: 0 0 15px 15px;
+            min-height: 300px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: none;
+            overflow-y: auto;
+            max-height: 50vh;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .upgrades-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .upgrade {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upgrade::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--upgrade-color), #B2FF59);
+        }
+        
+        .upgrade:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .upgrade-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .upgrade-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: var(--text-color);
+        }
+        
+        .upgrade-description {
+            font-size: 13px;
+            margin-bottom: 12px;
+            text-align: center;
+            color: rgba(var(--text-color), 0.8);
+        }
+        
+        .upgrade-stats {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .upgrade-level {
+            color: var(--primary-color);
+        }
+        
+        .upgrade-cost {
+            font-weight: bold;
+            color: var(--upgrade-color);
+        }
+        
+        .upgrade-pps {
+            color: var(--highlight-color);
+        }
+        
+        .upgrade-button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--upgrade-color), #00E676);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin-top: 8px;
+            box-shadow: 0 4px 8px rgba(0, 200, 83, 0.2);
+        }
+        
+        .upgrade-button:disabled {
+            background: rgba(224, 224, 224, 0.2);
+            color: rgba(158, 158, 158, 0.5);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .upgrade-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 200, 83, 0.3);
+        }
+        
+        .progress-container {
+            width: 100%;
+            margin-top: 12px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 11px;
+            color: rgba(var(--text-color), 0.6);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: rgba(224, 224, 224, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.5s ease-out;
+        }
+        
+        .achievements-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 15px;
+        }
+        
+        .achievement {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            opacity: 0.6;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .achievement::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--achievement-color), #82B1FF);
+        }
+        
+        .achievement.unlocked {
+            opacity: 1;
+            border: 1px solid var(--achievement-color);
+        }
+        
+        .achievement.unlocked::before {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: var(--achievement-color);
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .achievement-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            color: var(--achievement-color);
+        }
+        
+        .achievement-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: var(--text-color);
+        }
+        
+        .achievement-description {
+            font-size: 13px;
+            text-align: center;
+            color: rgba(var(--text-color), 0.8);
+        }
+        
+        .prestige-section {
+            background: linear-gradient(135deg, rgba(170, 0, 255, 0.1), rgba(224, 64, 251, 0.1));
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 15px;
+            border: 1px dashed var(--prestige-color);
+        }
+        
+        .prestige-title {
+            font-size: 20px;
+            color: var(--prestige-color);
+            margin-bottom: 12px;
+        }
+        
+        .prestige-description {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .prestige-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .prestige-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 100px;
+        }
+        
+        .prestige-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--prestige-color);
+        }
+        
+        .prestige-stat-label {
+            font-size: 13px;
+            color: rgba(var(--text-color), 0.8);
+        }
+        
+        .prestige-button {
+            background: linear-gradient(135deg, var(--prestige-color), #E040FB);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(170, 0, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .prestige-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(170, 0, 255, 0.4);
+        }
+        
+        .prestige-button:disabled {
+            background: rgba(224, 224, 224, 0.2);
+            color: rgba(158, 158, 158, 0.5);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--achievement-color), #82B1FF);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
+            transform: translateX(200%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            max-width: 300px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification-icon {
+            font-size: 30px;
+            flex-shrink: 0;
+        }
+        
+        .notification-content {
+            flex-grow: 1;
+        }
+        
+        .notification-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .notification-description {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            margin-top: 15px;
+            border-top: 1px solid rgba(var(--text-color), 0.1);
+            font-size: 13px;
+            color: rgba(var(--text-color), 0.7);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .version-info {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .settings-button {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--settings-color);
+            transition: transform 0.3s;
+            padding: 5px;
+        }
+        
+        .settings-button:hover {
+            transform: rotate(30deg);
+        }
+        
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 350px;
+            height: 100vh;
+            background-color: var(--panel-bg);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            transition: right 0.4s ease;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+        }
+        
+        .settings-panel.open {
+            right: 0;
+        }
+        
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .settings-title {
+            font-size: 22px;
+            color: var(--settings-color);
+        }
+        
+        .close-settings {
+            background: none;
+            border: none;
+            font-size: 26px;
+            cursor: pointer;
+            color: var(--settings-color);
+            padding: 5px;
+        }
+        
+        .settings-group {
+            margin-bottom: 20px;
+        }
+        
+        .settings-group-title {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: var(--settings-color);
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(var(--text-color), 0.1);
+        }
+        
+        .setting {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .setting-label {
+            font-size: 14px;
+        }
+        
+        .setting-control {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid rgba(var(--text-color), 0.2);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--upgrade-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .credits {
+            margin-top: 25px;
+            font-size: 12px;
+            text-align: center;
+            color: rgba(var(--text-color), 0.6);
+        }
+        
+        .save-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .game-button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+        
+        .save-button {
+            background: linear-gradient(135deg, var(--upgrade-color), #00E676);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 200, 83, 0.2);
+        }
+        
+        .reset-button {
+            background: linear-gradient(135deg, var(--highlight-color), #FF6E40);
+            color: white;
+            box-shadow: 0 4px 8px rgba(255, 61, 0, 0.2);
+        }
+        
+        .game-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .game-button:active {
+            transform: translateY(0);
+        }
+        
+        .milestone-reached {
+            animation: pulse 1s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+        
+        .level-up {
+            animation: level-up 0.5s;
+        }
+        
+        @keyframes level-up {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .offline-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--offline-color), #FFEE58);
+            color: #5D4037;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(255, 214, 0, 0.3);
+            z-index: 1000;
+            max-width: 90%;
+            text-align: center;
+            display: none;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .offline-notification.show {
+            display: block;
+            animation: slideDown 0.5s forwards;
+        }
+        
+        @keyframes slideDown {
+            from { top: -100px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+        
+        .offline-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .offline-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--highlight-color);
+        }
+        
+        .offline-time {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 15px;
+            }
+            
+            .save-buttons {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .upgrades-container, .achievements-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                flex: 1 0 100px;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .pancake {
+                font-size: 80px;
+            }
+            
+            .click-effect {
+                font-size: 20px;
+            }
+            
+            .prestige-stat {
+                min-width: 80px;
+            }
+            
+            .prestige-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            
+            .footer {
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+            
+            .version-info {
+                justify-content: center;
+            }
+            
+            .tab-content {
+                padding: 15px;
+                max-height: 60vh;
+            }
+            
+            .settings-panel {
+                max-width: 100%;
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .pancake {
+                font-size: 70px;
+            }
+            
+            .upgrade, .achievement {
+                padding: 12px;
+            }
+            
+            .prestige-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .prestige-stat {
+                width: 100%;
+            }
+            
+            .notification {
+                max-width: 90%;
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateX(200%);
+            }
+            
+            .notification.show {
+                transform: translateX(-50%) translateX(0);
+            }
+        }
+        
+        body.dark-mode {
+            background-image: radial-gradient(circle at 10% 20%, rgba(80, 80, 80, 0.3) 0%, rgba(40, 40, 40, 0.3) 90%);
+        }
+        
+        body:not(.dark-mode) {
+            background-image: radial-gradient(circle at 10% 20%, rgba(255, 214, 140, 0.3) 0%, rgba(255, 241, 214, 0.3) 90%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="stats">
+                <div class="pancake-count">🥞 <span id="pancakes">0</span></div>
+                <div class="pps">В секунду: <span id="pps">0</span></div>
+            </div>
+            <div class="save-buttons">
+                <button class="game-button save-button" id="save">
+                    <span>💾</span> Сохранить
+                </button>
+                <button class="game-button reset-button" id="reset">
+                    <span>🔄</span> Сбросить
+                </button>
+                <button class="settings-button" id="settings-button">⚙️</button>
+            </div>
+        </div>
+        
+        <div class="offline-notification" id="offline-notification">
+            <div class="offline-title">Вы заработали пока вас не было:</div>
+            <div class="offline-amount" id="offline-amount">0 🥞</div>
+            <div class="offline-time" id="offline-time"></div>
+        </div>
+        
+        <div class="clicker-section">
+            <h2 class="clicker-title">Кликай на блинчик!</h2>
+            <div class="clicker">
+                <div class="pancake" id="clicker">🥞</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="upgrades">🍳 Улучшения</button>
+            <button class="tab" data-tab="achievements">🏆 Достижения</button>
+            <button class="tab" data-tab="prestige">✨ Престиж</button>
+        </div>
+        
+        <div class="tab-content active" id="upgrades-tab">
+            <div class="upgrades-container" id="upgrades-container">
+                <!-- Улучшения будут добавляться здесь -->
+            </div>
+        </div>
+        
+        <div class="tab-content" id="achievements-tab">
+            <div class="achievements-container" id="achievements-container">
+                <!-- Достижения будут добавляться здесь -->
+            </div>
+        </div>
+        
+        <div class="tab-content" id="prestige-tab">
+            <div class="prestige-section">
+                <h2 class="prestige-title">Система Престижа</h2>
+                <p class="prestige-description">
+                    Когда вы достигнете 1 миллиона блинчиков, вы сможете престижироваться и начать заново, 
+                    но с постоянным множителем, который увеличит производство всех ваших улучшений!
+                </p>
+                
+                <div class="prestige-stats">
+                    <div class="prestige-stat">
+                        <div class="prestige-stat-value" id="prestige-multiplier">1x</div>
+                        <div class="prestige-stat-label">Текущий множитель</div>
+                    </div>
+                    <div class="prestige-stat">
+                        <div class="prestige-stat-value" id="prestige-level">0</div>
+                        <div class="prestige-stat-label">Уровень престижа</div>
+                    </div>
+                    <div class="prestige-stat">
+                        <div class="prestige-stat-value" id="prestige-remaining">1,000,000</div>
+                        <div class="prestige-stat-label">Осталось до престижа</div>
+                    </div>
+                </div>
+                
+                <button class="prestige-button" id="prestige-button" disabled>Престиж</button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="copyright">© Ahb_Ib 2025</div>
+            <div class="version-info">
+                <span>Версия: <span id="version">1.1.1</span></span>
+                <span>|</span>
+                <span id="save-time">Последнее сохранение: никогда</span>
+            </div>
+        </div>
+        
+        <div class="notification" id="notification">
+            <div class="notification-icon">🎉</div>
+            <div class="notification-content">
+                <div class="notification-title" id="notification-title">Достижение получено!</div>
+                <div class="notification-description" id="notification-description"></div>
+            </div>
+        </div>
+        
+        <div class="settings-panel" id="settings-panel">
+            <div class="settings-header">
+                <h2 class="settings-title">Настройки</h2>
+                <button class="close-settings" id="close-settings">×</button>
+            </div>
+            
+            <div class="settings-group">
+                <h3 class="settings-group-title">Геймплей</h3>
+                <div class="setting">
+                    <label class="setting-label">Автосохранение</label>
+                    <label class="switch">
+                        <input type="checkbox" id="autosave-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting">
+                    <label class="setting-label">Эффекты кликов</label>
+                    <label class="switch">
+                        <input type="checkbox" id="click-effects-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting">
+                    <label class="setting-label">Анимации</label>
+                    <label class="switch">
+                        <input type="checkbox" id="animations-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <h3 class="settings-group-title">Внешний вид</h3>
+                <div class="setting">
+                    <label class="setting-label">Тёмная тема</label>
+                    <label class="switch">
+                        <input type="checkbox" id="dark-mode-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting">
+                    <label class="setting-label">Размер шрифта</label>
+                    <select class="setting-control" id="font-size-select">
+                        <option value="small">Маленький</option>
+                        <option value="medium" selected>Средний</option>
+                        <option value="large">Большой</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="credits">
+                <p>Pancake Clicker</p>
+                <p>Версия 1.1.1</p>
+                <p>© Ahb_Ib 2025</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Игровые переменные
+        let pancakes = 0;
+        let pps = 0;
+        let totalPancakes = 0;
+        let totalClicks = 0;
+        let prestigeLevel = 0;
+        let prestigeMultiplier = 1;
+        let lastSaveTime = null;
+        let lastPlayTime = Date.now();
+        let maxOfflineTime = 24 * 60 * 60 * 1000;
+        
+        // Настройки
+        const settings = {
+            autosave: true,
+            clickEffects: true,
+            animations: true,
+            darkMode: false,
+            fontSize: 'medium'
+        };
+        
+        // Улучшения
+        const upgrades = [
+            { 
+                id: 1, 
+                name: "Бабушка", 
+                icon: "👵", 
+                description: "Бабушка печет блинчики с любовью", 
+                baseCost: 10, 
+                basePps: 0.1, 
+                maxLevel: 200,
+                level: 0,
+                cost: 10,
+                currentPps: 0
+            },
+            { 
+                id: 2, 
+                name: "Кухня", 
+                icon: "🏠", 
+                description: "Больше места для готовки блинчиков", 
+                baseCost: 50, 
+                basePps: 0.5, 
+                maxLevel: 200,
+                level: 0,
+                cost: 50,
+                currentPps: 0
+            },
+            { 
+                id: 3, 
+                name: "Повар", 
+                icon: "👨‍🍳", 
+                description: "Профессиональный повар для идеальных блинчиков", 
+                baseCost: 100, 
+                basePps: 1, 
+                maxLevel: 200,
+                level: 0,
+                cost: 100,
+                currentPps: 0
+            },
+            { 
+                id: 4, 
+                name: "Ресторан", 
+                icon: "🍽️", 
+                description: "Блинная с постоянными клиентами", 
+                baseCost: 500, 
+                basePps: 5, 
+                maxLevel: 200,
+                level: 0,
+                cost: 500,
+                currentPps: 0
+            },
+            { 
+                id: 5, 
+                name: "Ферма", 
+                icon: "🌾", 
+                description: "Собственное производство муки и яиц", 
+                baseCost: 1000, 
+                basePps: 10, 
+                maxLevel: 200,
+                level: 0,
+                cost: 1000,
+                currentPps: 0
+            },
+            { 
+                id: 6, 
+                name: "Фабрика", 
+                icon: "🏭", 
+                description: "Массовое производство блинчиков", 
+                baseCost: 5000, 
+                basePps: 50, 
+                maxLevel: 200,
+                level: 0,
+                cost: 5000,
+                currentPps: 0
+            },
+            { 
+                id: 7, 
+                name: "Лаборатория", 
+                icon: "🔬", 
+                description: "Исследование новых рецептов блинчиков", 
+                baseCost: 10000, 
+                basePps: 100, 
+                maxLevel: 200,
+                level: 0,
+                cost: 10000,
+                currentPps: 0
+            },
+            { 
+                id: 8, 
+                name: "Завод", 
+                icon: "🏢", 
+                description: "Автоматизированное производство блинчиков", 
+                baseCost: 50000, 
+                basePps: 500, 
+                maxLevel: 200,
+                level: 0,
+                cost: 50000,
+                currentPps: 0
+            },
+            { 
+                id: 9, 
+                name: "Блинная Империя", 
+                icon: "👑", 
+                description: "Мировая сеть блинных", 
+                baseCost: 100000, 
+                basePps: 1000, 
+                maxLevel: 200,
+                level: 0,
+                cost: 100000,
+                currentPps: 0
+            },
+            { 
+                id: 10, 
+                name: "Блинчики в Космосе", 
+                icon: "🚀", 
+                description: "Продажа блинчиков на других планетах", 
+                baseCost: 1000000, 
+                basePps: 10000, 
+                maxLevel: 200,
+                level: 0,
+                cost: 1000000,
+                currentPps: 0
+            }
+        ];
+        
+        // Достижения
+        const achievements = [
+            { id: 1, name: "Первый блин", icon: "🥞", description: "Создайте свой первый блинчик", condition: () => totalPancakes >= 1, unlocked: false },
+            { id: 2, name: "Блинный повар", icon: "👨‍🍳", description: "Создайте 100 блинчиков", condition: () => totalPancakes >= 100, unlocked: false },
+            { id: 3, name: "Блинный магнат", icon: "💰", description: "Создайте 1,000 блинчиков", condition: () => totalPancakes >= 1000, unlocked: false },
+            { id: 4, name: "Блинный король", icon: "👑", description: "Создайте 10,000 блинчиков", condition: () => totalPancakes >= 10000, unlocked: false },
+            { id: 5, name: "Блинный бог", icon: "🌟", description: "Создайте 100,000 блинчиков", condition: () => totalPancakes >= 100000, unlocked: false },
+            { id: 6, name: "Кликающий маньяк", icon: "🖱️", description: "Сделайте 100 кликов", condition: () => totalClicks >= 100, unlocked: false },
+            { id: 7, name: "Кликающий мастер", icon: "💻", description: "Сделайте 500 кликов", condition: () => totalClicks >= 500, unlocked: false },
+            { id: 8, name: "Кликающий бог", icon: "⚡", description: "Сделайте 1,000 кликов", condition: () => totalClicks >= 1000, unlocked: false },
+            { id: 9, name: "Улучшатель", icon: "🔧", description: "Купите 10 улучшений", condition: () => upgrades.reduce((sum, up) => sum + up.level, 0) >= 10, unlocked: false },
+            { id: 10, name: "Мастер улучшений", icon: "🔨", description: "Купите 50 улучшений", condition: () => upgrades.reduce((sum, up) => sum + up.level, 0) >= 50, unlocked: false },
+            { id: 11, name: "Легенда улучшений", icon: "🏆", description: "Купите 100 улучшений", condition: () => upgrades.reduce((sum, up) => sum + up.level, 0) >= 100, unlocked: false },
+            { id: 12, name: "Первый престиж", icon: "✨", description: "Пройдите престиж в первый раз", condition: () => prestigeLevel >= 1, unlocked: false },
+            { id: 13, name: "Ветерана престижа", icon: "⭐", description: "Пройдите престиж 5 раз", condition: () => prestigeLevel >= 5, unlocked: false },
+            { id: 14, name: "Мастер престижа", icon: "💫", description: "Пройдите престиж 10 раз", condition: () => prestigeLevel >= 10, unlocked: false }
+        ];
+        
+        // DOM элементы
+        const pancakeDisplay = document.getElementById('pancakes');
+        const ppsDisplay = document.getElementById('pps');
+        const clicker = document.getElementById('clicker');
+        const upgradesContainer = document.getElementById('upgrades-container');
+        const achievementsContainer = document.getElementById('achievements-container');
+        const prestigeButton = document.getElementById('prestige-button');
+        const prestigeMultiplierDisplay = document.getElementById('prestige-multiplier');
+        const prestigeLevelDisplay = document.getElementById('prestige-level');
+        const prestigeRemainingDisplay = document.getElementById('prestige-remaining');
+        
+        // Инициализация игры
+        function initGame() {
+            loadSettings();
+            loadGame();
+            renderUpgrades();
+            renderAchievements();
+            applySettings();
+            updateUI();
+            
+            // Запуск игрового цикла
+            setInterval(gameLoop, 100);
+            
+            // Автосохранение
+            setInterval(() => {
+                if (settings.autosave) {
+                    saveGame(false);
+                }
+            }, 30000);
+        }
+        
+        // Игровой цикл
+        function gameLoop() {
+            // Добавление блинчиков в секунду
+            const totalPps = calculateTotalPps();
+            if (totalPps > 0) {
+                const earned = totalPps / 10; // делим на 10 т.к. цикл каждые 100мс
+                pancakes += earned;
+                totalPancakes += earned;
+                pps = totalPps;
+                ppsDisplay.textContent = formatNumber(pps);
+            }
+            
+            // Проверка достижений
+            checkAchievements();
+            
+            // Обновление UI
+            updatePancakeDisplay();
+            updatePrestigeButton();
+            updateUpgradeButtons();
+        }
+        
+        // Расчет общего PPS
+        function calculateTotalPps() {
+            let total = 0;
+            for (const upgrade of upgrades) {
+                total += upgrade.currentPps * prestigeMultiplier;
+            }
+            return total;
+        }
+        
+        // Рендер улучшений
+        function renderUpgrades() {
+            upgradesContainer.innerHTML = '';
+            
+            upgrades.forEach(upgrade => {
+                const progressPercent = (upgrade.level / upgrade.maxLevel) * 100;
+                
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = 'upgrade';
+                upgradeElement.innerHTML = `
+                    <div class="upgrade-icon">${upgrade.icon}</div>
+                    <div class="upgrade-name">${upgrade.name}</div>
+                    <div class="upgrade-description">${upgrade.description}</div>
+                    
+                    <div class="upgrade-stats">
+                        <div class="upgrade-level">Ур. ${upgrade.level}/${upgrade.maxLevel}</div>
+                        <div class="upgrade-pps">${formatNumber(upgrade.currentPps * prestigeMultiplier)}/сек</div>
+                    </div>
+                    
+                    <div class="upgrade-cost">${formatNumber(upgrade.cost)} 🥞</div>
+                    
+                    <button class="upgrade-button" ${pancakes < upgrade.cost || upgrade.level >= upgrade.maxLevel ? 'disabled' : ''}>
+                        ${upgrade.level >= upgrade.maxLevel ? 'Макс. уровень' : 'Улучшить'}
+                    </button>
+                    
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>Прогресс</span>
+                            <span>${progressPercent.toFixed(1)}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                const button = upgradeElement.querySelector('.upgrade-button');
+                button.addEventListener('click', () => buyUpgrade(upgrade.id));
+                
+                upgradesContainer.appendChild(upgradeElement);
+            });
+        }
+        
+        // Обновление кнопок улучшений
+        function updateUpgradeButtons() {
+            const buttons = document.querySelectorAll('.upgrade-button');
+            buttons.forEach((button, index) => {
+                const upgrade = upgrades[index];
+                if (upgrade) {
+                    button.disabled = pancakes < upgrade.cost || upgrade.level >= upgrade.maxLevel;
+                }
+            });
+        }
+        
+        // Покупка улучшения
+        function buyUpgrade(upgradeId) {
+            const upgrade = upgrades.find(u => u.id === upgradeId);
+            if (!upgrade) return;
+            
+            if (pancakes >= upgrade.cost && upgrade.level < upgrade.maxLevel) {
+                pancakes -= upgrade.cost;
+                upgrade.level++;
+                
+                // Обновляем стоимость и PPS
+                upgrade.cost = Math.floor(upgrade.baseCost * Math.pow(1.15, upgrade.level));
+                upgrade.currentPps = upgrade.basePps * upgrade.level;
+                
+                updatePancakeDisplay();
+                renderUpgrades();
+                
+                // Анимация
+                if (settings.animations) {
+                    const upgradeElement = document.querySelectorAll('.upgrade')[upgradeId - 1];
+                    if (upgradeElement) {
+                        upgradeElement.classList.add('level-up');
+                        setTimeout(() => upgradeElement.classList.remove('level-up'), 500);
+                    }
+                }
+                
+                if (settings.autosave) saveGame(false);
+            }
+        }
+        
+        // Рендер достижений
+        function renderAchievements() {
+            achievementsContainer.innerHTML = '';
+            
+            achievements.forEach(achievement => {
+                const achievementElement = document.createElement('div');
+                achievementElement.className = `achievement ${achievement.unlocked ? 'unlocked' : ''}`;
+                achievementElement.innerHTML = `
+                    <div class="achievement-icon">${achievement.icon}</div>
+                    <div class="achievement-name">${achievement.name}</div>
+                    <div class="achievement-description">${achievement.description}</div>
+                `;
+                achievementsContainer.appendChild(achievementElement);
+            });
+        }
+        
+        // Проверка достижений
+        function checkAchievements() {
+            achievements.forEach(achievement => {
+                if (!achievement.unlocked && achievement.condition()) {
+                    achievement.unlocked = true;
+                    showNotification('Достижение получено!', achievement.name);
+                    renderAchievements();
+                    if (settings.autosave) saveGame(false);
+                }
+            });
+        }
+        
+        // Обновление UI
+        function updateUI() {
+            updatePancakeDisplay();
+            updatePrestigeButton();
+        }
+        
+        // Обновление отображения блинчиков
+        function updatePancakeDisplay() {
+            pancakeDisplay.textContent = formatNumber(pancakes);
+        }
+        
+        // Обновление кнопки престижа
+        function updatePrestigeButton() {
+            const requiredForPrestige = 1000000;
+            const remaining = Math.max(0, requiredForPrestige - pancakes);
+            
+            prestigeMultiplierDisplay.textContent = (1 + prestigeLevel * 0.5).toFixed(1) + 'x';
+            prestigeLevelDisplay.textContent = prestigeLevel;
+            prestigeRemainingDisplay.textContent = formatNumber(remaining);
+            
+            if (pancakes >= requiredForPrestige) {
+                prestigeButton.disabled = false;
+                prestigeButton.textContent = `Престиж (+${prestigeLevel + 1} уровень)`;
+            } else {
+                prestigeButton.disabled = true;
+                prestigeButton.textContent = 'Недостаточно блинчиков';
+            }
+        }
+        
+        // Престиж
+        function prestige() {
+            if (pancakes >= 1000000) {
+                if (confirm("Вы уверены, что хотите престижироваться? Вы потеряете все блинчики и улучшения, но получите постоянный множитель производства.")) {
+                    prestigeLevel++;
+                    prestigeMultiplier = 1 + prestigeLevel * 0.5;
+                    
+                    // Сброс прогресса
+                    pancakes = 0;
+                    totalPancakes = 0;
+                    totalClicks = 0;
+                    pps = 0;
+                    
+                    // Сброс улучшений
+                    upgrades.forEach(upgrade => {
+                        upgrade.level = 0;
+                        upgrade.cost = upgrade.baseCost;
+                        upgrade.currentPps = 0;
+                    });
+                    
+                    updateUI();
+                    renderUpgrades();
+                    checkAchievements();
+                    
+                    if (settings.autosave) saveGame(false);
+                    
+                    showNotification('Престиж достигнут!', `Теперь у вас множитель x${prestigeMultiplier}`);
+                }
+            }
+        }
+        
+        // Форматирование чисел
+        function formatNumber(num) {
+            if (num >= 1000000000) return (num / 1000000000).toFixed(2) + 'B';
+            if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+            if (num >= 10000) return (num / 1000).toFixed(1) + 'K';
+            if (num >= 1000) return (num / 1000).toFixed(2) + 'K';
+            if (num > 0 && num < 100) return num.toFixed(1);
+            return Math.floor(num).toString();
+        }
+        
+        // Показать уведомление
+        function showNotification(title, description) {
+            if (!settings.animations) return;
+            
+            const notification = document.getElementById('notification');
+            const notificationTitle = document.getElementById('notification-title');
+            const notificationDescription = document.getElementById('notification-description');
+            
+            notificationTitle.textContent = title;
+            notificationDescription.textContent = description;
+            
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 3000);
+        }
+        
+        // Сохранение игры
+        function saveGame(showNotification = true) {
+            const gameData = {
+                pancakes,
+                pps,
+                totalPancakes,
+                totalClicks,
+                prestigeLevel,
+                prestigeMultiplier,
+                upgrades: upgrades.map(up => ({
+                    id: up.id,
+                    level: up.level,
+                    cost: up.cost,
+                    currentPps: up.currentPps
+                })),
+                achievements: achievements.map(ach => ({
+                    id: ach.id,
+                    unlocked: ach.unlocked
+                })),
+                settings,
+                lastSaveTime: Date.now()
+            };
+            
+            localStorage.setItem('pancakeClickerSave', JSON.stringify(gameData));
+            localStorage.setItem('pancakeClickerLastPlayTime', Date.now().toString());
+            
+            lastSaveTime = Date.now();
+            updateSaveTime();
+            
+            if (showNotification && !settings.autosave) {
+                showNotification('Игра сохранена!', 'Ваш прогресс был сохранён.');
+            }
+        }
+        
+        // Загрузка игры
+        function loadGame() {
+            const savedData = localStorage.getItem('pancakeClickerSave');
+            if (savedData) {
+                try {
+                    const gameData = JSON.parse(savedData);
+                    
+                    pancakes = gameData.pancakes || 0;
+                    pps = gameData.pps || 0;
+                    totalPancakes = gameData.totalPancakes || 0;
+                    totalClicks = gameData.totalClicks || 0;
+                    prestigeLevel = gameData.prestigeLevel || 0;
+                    prestigeMultiplier = gameData.prestigeMultiplier || 1;
+                    lastSaveTime = gameData.lastSaveTime || null;
+                    
+                    // Загрузка улучшений
+                    if (gameData.upgrades) {
+                        gameData.upgrades.forEach(savedUpgrade => {
+                            const upgrade = upgrades.find(u => u.id === savedUpgrade.id);
+                            if (upgrade) {
+                                upgrade.level = savedUpgrade.level || 0;
+                                upgrade.cost = savedUpgrade.cost || upgrade.baseCost;
+                                upgrade.currentPps = savedUpgrade.currentPps || 0;
+                            }
+                        });
+                    }
+                    
+                    // Загрузка достижений
+                    if (gameData.achievements) {
+                        gameData.achievements.forEach(savedAchievement => {
+                            const achievement = achievements.find(a => a.id === savedAchievement.id);
+                            if (achievement) {
+                                achievement.unlocked = savedAchievement.unlocked || false;
+                            }
+                        });
+                    }
+                    
+                    // Загрузка настроек
+                    if (gameData.settings) {
+                        Object.assign(settings, gameData.settings);
+                    }
+                    
+                    updateSaveTime();
+                    showNotification('Игра загружена!', 'Ваш прогресс был восстановлен.');
+                } catch (e) {
+                    console.error('Ошибка загрузки сохранения:', e);
+                }
+            }
+        }
+        
+        // Обновление времени сохранения
+        function updateSaveTime() {
+            const saveTimeElement = document.getElementById('save-time');
+            if (lastSaveTime) {
+                const saveDate = new Date(lastSaveTime);
+                const now = new Date();
+                const diffMs = now - saveDate;
+                
+                const timeString = saveDate.toLocaleTimeString('ru-RU', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                const dateString = saveDate.toLocaleDateString('ru-RU');
+                
+                if (diffMs < 60000) {
+                    saveTimeElement.textContent = `Последнее сохранение: только что`;
+                } else if (diffMs < 3600000) {
+                    const minutes = Math.floor(diffMs / 60000);
+                    saveTimeElement.textContent = `Последнее сохранение: ${minutes} мин назад`;
+                } else if (diffMs < 86400000) {
+                    saveTimeElement.textContent = `Последнее сохранение: сегодня в ${timeString}`;
+                } else {
+                    saveTimeElement.textContent = `Последнее сохранение: ${dateString} в ${timeString}`;
+                }
+            } else {
+                saveTimeElement.textContent = 'Последнее сохранение: никогда';
+            }
+        }
+        
+        // Загрузка настроек
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('pancakeClickerSettings');
+            if (savedSettings) {
+                try {
+                    Object.assign(settings, JSON.parse(savedSettings));
+                    applySettings();
+                    updateSettingsUI();
+                    return true;
+                } catch (e) {
+                    console.error('Ошибка загрузки настроек:', e);
+                }
+            }
+            return false;
+        }
+        
+        // Сохранение настроек
+        function saveSettings() {
+            localStorage.setItem('pancakeClickerSettings', JSON.stringify(settings));
+        }
+        
+        // Применение настроек
+        function applySettings() {
+            // Темная тема
+            if (settings.darkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            
+            // Размер шрифта
+            let size;
+            switch (settings.fontSize) {
+                case 'small': size = '14px'; break;
+                case 'large': size = '18px'; break;
+                default: size = '16px';
+            }
+            document.body.style.fontSize = size;
+        }
+        
+        // Обновление UI настроек
+        function updateSettingsUI() {
+            document.getElementById('autosave-toggle').checked = settings.autosave;
+            document.getElementById('click-effects-toggle').checked = settings.clickEffects;
+            document.getElementById('animations-toggle').checked = settings.animations;
+            document.getElementById('dark-mode-toggle').checked = settings.darkMode;
+            document.getElementById('font-size-select').value = settings.fontSize;
+        }
+        
+        // Эффект клика
+        function createClickEffect(x, y) {
+            if (!settings.clickEffects) return;
+            
+            const effect = document.createElement('div');
+            effect.className = 'click-effect';
+            effect.textContent = `+${formatNumber(1 * prestigeMultiplier)}`;
+            effect.style.left = `${x}px`;
+            effect.style.top = `${y}px`;
+            
+            document.body.appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 1000);
+        }
+        
+        // Инициализация при загрузке
+        window.addEventListener('load', () => {
+            initGame();
+            
+            // Клик по блинчику
+            clicker.addEventListener('click', (e) => {
+                const clickPower = 1 * prestigeMultiplier;
+                pancakes += clickPower;
+                totalPancakes += clickPower;
+                totalClicks++;
+                
+                createClickEffect(e.clientX, e.clientY);
+                updatePancakeDisplay();
+                checkAchievements();
+            });
+            
+            // Переключение вкладок
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+                });
+            });
+            
+            // Кнопка престижа
+            prestigeButton.addEventListener('click', prestige);
+            
+            // Кнопка сохранения
+            document.getElementById('save').addEventListener('click', () => saveGame(true));
+            
+            // Кнопка сброса
+            document.getElementById('reset').addEventListener('click', () => {
+                if (confirm('Вы уверены, что хотите сбросить весь прогресс? Это нельзя отменить.')) {
+                    localStorage.removeItem('pancakeClickerSave');
+                    localStorage.removeItem('pancakeClickerSettings');
+                    localStorage.removeItem('pancakeClickerLastPlayTime');
+                    location.reload();
+                }
+            });
+            
+            // Настройки
+            document.getElementById('settings-button').addEventListener('click', () => {
+                document.getElementById('settings-panel').classList.add('open');
+            });
+            
+            document.getElementById('close-settings').addEventListener('click', () => {
+                document.getElementById('settings-panel').classList.remove('open');
+            });
+            
+            // Обработчики настроек
+            document.getElementById('autosave-toggle').addEventListener('change', (e) => {
+                settings.autosave = e.target.checked;
+                saveSettings();
+            });
+            
+            document.getElementById('click-effects-toggle').addEventListener('change', (e) => {
+                settings.clickEffects = e.target.checked;
+                saveSettings();
+            });
+            
+            document.getElementById('animations-toggle').addEventListener('change', (e) => {
+                settings.animations = e.target.checked;
+                saveSettings();
+            });
+            
+            document.getElementById('dark-mode-toggle').addEventListener('change', (e) => {
+                settings.darkMode = e.target.checked;
+                applySettings();
+                saveSettings();
+            });
+            
+            document.getElementById('font-size-select').addEventListener('change', (e) => {
+                settings.fontSize = e.target.value;
+                applySettings();
+                saveSettings();
+            });
+            
+            // Сохранение при закрытии
+            window.addEventListener('beforeunload', () => {
+                if (settings.autosave) saveGame(false);
+            });
+        });
+    </script>
+</body>
+</html>
